@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#17172b">
+<title>Stickman Story Maker</title>
+<style>
+:root{--bg:#10111d;--panel:#1b1d30;--panel2:#252842;--text:#f6f5ff;--muted:#b8bad4;--accent:#9b7bff;--accent2:#53e0c0;--border:#383b5c}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(180deg,#17172b,#10111d 60%);color:var(--text);font:16px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+header{padding:22px 16px 14px;max-width:1100px;margin:auto}h1{margin:0;font-size:26px;letter-spacing:-.5px}header p{margin:7px 0 0;color:var(--muted);font-size:14px}
+main{max-width:1100px;margin:auto;padding:0 12px 30px;display:grid;grid-template-columns:minmax(0,1fr);gap:14px}
+.panel{background:rgba(27,29,48,.96);border:1px solid var(--border);border-radius:18px;padding:14px;min-width:0}
+label{display:block;font-weight:700;font-size:13px;margin:0 0 7px;color:#dedcff}
+textarea,input,select{font:inherit;color:var(--text);background:#111326;border:1px solid #44476a;border-radius:12px;padding:11px;width:100%;outline:none}
+textarea{min-height:90px;resize:vertical;line-height:1.45}textarea:focus,input:focus,select:focus{border-color:var(--accent)}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+button{border:0;border-radius:12px;padding:12px 14px;font:700 14px -apple-system,BlinkMacSystemFont,sans-serif;background:var(--accent);color:#171329;cursor:pointer;min-height:44px}
+button.secondary{background:#303350;color:var(--text);border:1px solid #4a4d70}button.green{background:var(--accent2);color:#08221d}button:disabled{opacity:.45;cursor:not-allowed}
+.stage-wrap{display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
+canvas{width:100%;max-width:390px;display:block;margin:0 auto;background:#d9efff;border-radius:16px;aspect-ratio:9/16;object-fit:contain}
+.status{font-size:13px;color:var(--muted);line-height:1.45;margin-top:10px}
+.scene-list{display:flex;gap:8px;overflow-x:auto;padding:2px 1px 7px;margin-top:12px}
+.scene-chip{flex:0 0 auto;max-width:180px;text-align:left;background:#292c48;border:1px solid #46496d;color:var(--text);font-weight:500}
+.scene-chip.active{border-color:var(--accent2);box-shadow:0 0 0 1px var(--accent2) inset}
+.tiny{font-size:12px;color:var(--muted);line-height:1.5;margin-top:9px}.tag{display:inline-block;background:#303350;color:#dcd8ff;padding:4px 8px;border-radius:999px;font-size:11px;margin:0 5px 5px 0}
+.stepper{display:flex;gap:5px;margin:14px 0 16px}.step-dot{flex:1;height:5px;border-radius:9px;background:#373a59}.step-dot.active{background:var(--accent2)}
+.step-title{font-size:20px;margin:0 0 6px}.step-sub{font-size:13px;color:var(--muted);line-height:1.45;margin:0 0 16px}
+.step{display:none}.step.active{display:block}
+.choice-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.choice{background:#242741;border:1px solid #44476a;border-radius:14px;padding:13px;text-align:left;color:var(--text);min-height:90px}
+.choice.selected{border:2px solid var(--accent2);background:#263b48}
+.choice strong{display:block;font-size:15px;margin-bottom:5px}.choice span{font-size:12px;color:var(--muted);font-weight:400;line-height:1.35;display:block}
+.character-card{border:1px solid var(--border);border-radius:14px;padding:12px;margin:12px 0;background:#17192b}
+.character-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.avatar{width:48px;height:48px;flex:0 0 48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:23px;border:1px solid #ffffff33}
+.notice{background:#252842;border-radius:12px;padding:11px;font-size:12px;color:#dedcff;line-height:1.5;margin-top:12px}
+@media(min-width:850px){main{grid-template-columns:minmax(320px,.9fr) minmax(320px,1fr);align-items:start}.stage-wrap{position:sticky;top:12px}.panel{padding:17px}header{padding-top:28px}}
+</style>
+</head>
+<body>
+<header>
+  <h1>✨ Stickman Story Maker</h1>
+  <p>Build a story video in steps · personal prototype · no account or paid API</p>
+</header>
+<main>
+<section class="panel">
+  <div class="stepper" id="stepper"><div class="step-dot active"></div><div class="step-dot"></div><div class="step-dot"></div><div class="step-dot"></div><div class="step-dot"></div></div>
+
+  <section class="step active" data-step="0">
+    <h2 class="step-title">1. Choose your video format</h2>
+    <p class="step-sub">Choose whether you're making a short clip or a longer story.</p>
+    <div class="choice-grid">
+      <button class="choice selected" data-format="short"><strong>⚡ Short form</strong><span>For Shorts, Reels, and TikTok-style videos.</span></button>
+      <button class="choice" data-format="long"><strong>🎞️ Long form</strong><span>For longer narrated stories.</span></button>
+    </div>
+    <div class="notice">Your choice helps guide pacing. The final length is selected in the animation step.</div>
+  </section>
+
+  <section class="step" data-step="1">
+    <h2 class="step-title">2. Choose a stickman world</h2>
+    <p class="step-sub">Pick one visual template. Your scenes will keep this style.</p>
+    <div class="choice-grid">
+      <button class="choice selected" data-template="normal"><strong>🌆 Stickman Normal</strong><span>Present-day clothes, homes, schools, cities, and modern objects.</span></button>
+      <button class="choice" data-template="ancient"><strong>🏛️ Stickman Ancient</strong><span>Ancient clothing, villages, castles, markets, and historical settings.</span></button>
+    </div>
+  </section>
+
+  <section class="step" data-step="2">
+    <h2 class="step-title">3. Create your three characters</h2>
+    <p class="step-sub">One main character and two side characters. The app draws simple colorful stickmen from your choices.</p>
+    <div id="characterForms"></div>
+    <div class="notice">Character descriptions help keep the same character consistent across scenes. This prototype draws simple stickman designs from your selections; it doesn't call an external image-generation service.</div>
+  </section>
+
+  <section class="step" data-step="3">
+    <h2 class="step-title">4. Set the animation length</h2>
+    <p class="step-sub">Choose the total target duration for your video.</p>
+    <div class="choice-grid">
+      <button class="choice" data-duration="15"><strong>15 seconds</strong><span>Very short</span></button>
+      <button class="choice selected" data-duration="30"><strong>30 seconds</strong><span>Quick story</span></button>
+      <button class="choice" data-duration="45"><strong>45 seconds</strong><span>More scenes</span></button>
+      <button class="choice" data-duration="60"><strong>60 seconds</strong><span>Full short story</span></button>
+    </div>
+  </section>
+
+  <section class="step" data-step="4">
+    <h2 class="step-title">5. Keep every scene consistent</h2>
+    <p class="step-sub">Add the details that every scene should follow. These guide the scene descriptions generated from your script.</p>
+    <label for="topic">Topic or story idea</label><input id="topic" placeholder="e.g. A brave village hero finds a lost treasure">
+    <div class="row">
+      <div><label for="period">Time period</label><input id="period" placeholder="e.g. Present day or 1200 BCE"></div>
+      <div><label for="location">Location</label><input id="location" placeholder="e.g. London, a village, a forest"></div>
+    </div>
+    <div style="margin-top:12px"><label for="show">Things to show</label><textarea id="show" placeholder="e.g. A blue backpack, a stone bridge, the main character's red shirt"></textarea></div>
+    <div style="margin-top:12px"><label for="avoid">Things to avoid</label><textarea id="avoid" placeholder="e.g. Modern phones in ancient scenes, extra characters, scary imagery"></textarea></div>
+    <div class="notice">The app applies these notes to its scene cards. Because this is a free local prototype, it does not use a paid AI model to invent detailed scenes automatically.</div>
+  </section>
+
+  <section class="step" data-step="5">
+    <h2 class="step-title">6. Write your script</h2>
+    <p class="step-sub">Paste your script or write it here. We'll split it into scenes and fit the timing to your chosen duration.</p>
+    <label for="story">Your script</label>
+    <textarea id="story" style="min-height:190px" placeholder="Write your story here. Use short sentences for clear scenes."></textarea>
+    <div class="row">
+      <div><label for="voice">Narration voice</label><select id="voice"><option value="">Default device voice</option></select></div>
+      <div><label for="caption">Caption style</label><select id="caption"><option value="sentence">Full sentence</option><option value="word">Word-by-word highlight</option></select></div>
+    </div>
+    <div class="notice" id="summary">Your choices will appear here.</div>
+  </section>
+
+  <div class="actions">
+    <button id="back" class="secondary" disabled>← Back</button>
+    <button id="next" class="green">Next →</button>
+    <button id="create" style="display:none">🎬 Create video</button>
+  </div>
+  <div id="status" class="status" role="status">Step 1 of 6 · Choose a format to begin.</div>
+</section>
+
+<section class="panel stage-wrap">
+  <div>
+    <canvas id="canvas" width="720" height="1280" aria-label="Animated stickman scene preview"></canvas>
+    <div id="sceneList" class="scene-list" aria-label="Scenes"></div>
+    <div class="actions">
+      <button id="play" class="green">▶ Play story</button>
+      <button id="stop" class="secondary">■ Stop</button>
+      <button id="speak" class="secondary">🔊 Read narration</button>
+      <button id="mute" class="secondary">🔇 Stop voice</button>
+      <button id="export" class="secondary">⬇ Export video</button>
+    </div>
+    <p class="tiny">Preview is vertical 9:16. Video export depends on your browser. Narration is played through your device and is not embedded in this prototype's exported video.</p>
+  </div>
+</section>
+</main>
+<footer style="max-width:1100px;margin:auto;padding:0 16px 26px;color:var(--muted);font-size:12px;line-height:1.5">
+Free local-first prototype. It doesn't upload your story. Browser text-to-speech is used where available. Export may not work in every iPhone browser.
+</footer>
+<script>
+(() => {
+const $=id=>document.getElementById(id), canvas=$('canvas'),ctx=canvas.getContext('2d');
+let step=0,format='short',template='normal',duration=30,scenes=[],current=0,playing=false,startAt=0,raf=0,lastScene=-1,voices=[];
+const palette=['#ff5b6e','#4f7cff','#ffb52e'];
+const defaults=[
+ {role:'Main character',name:'Alex',desc:'A brave, curious hero wearing a red top',color:'#ff5b6e'},
+ {role:'Side character 1',name:'Jamie',desc:'A loyal friend wearing blue',color:'#4f7cff'},
+ {role:'Side character 2',name:'Riley',desc:'A clever helper wearing yellow',color:'#ffb52e'}
+];
+const palettes=[['#C9F2FF','#F9D5E5','#B6F0C4'],['#FFE4A8','#FFC6A8','#C5D9FF'],['#D8CCFF','#BDF5E8','#FFD6E8'],['#C7F5D9','#B9DFFF','#FFF0AD']];
+function setStatus(t){$('status').textContent=t}
+function showStep(n){
+ step=Math.max(0,Math.min(5,n));
+ document.querySelectorAll('.step').forEach((el,i)=>el.classList.toggle('active',i===step));
+ document.querySelectorAll('.step-dot').forEach((el,i)=>el.classList.toggle('active',i<=step));
+ $('back').disabled=step===0;$('next').style.display=step===5?'none':'inline-block';$('create').style.display=step===5?'inline-block':'none';
+ if(step===5)updateSummary();
+ setStatus(`Step ${step+1} of 6 · ${['Choose a format.','Choose a template.','Set up your three characters.','Choose the animation duration.','Add scene consistency details.','Write your script, then create the video.'][step]}`);
+}
+function makeCharacterForms(){
+ const wrap=$('characterForms');wrap.innerHTML='';
+ defaults.forEach((d,i)=>{
+  const card=document.createElement('div');card.className='character-card';
+  card.innerHTML=`<div class="character-head"><div class="avatar" style="background:${d.color}">🕴️</div><div><strong>${d.role}</strong><div class="tiny">Character ${i+1} of 3</div></div></div>
+  <div class="row"><div><label for="charName${i}">Name</label><input id="charName${i}" maxlength="30" value="${d.name}" placeholder="Character name"></div>
+  <div><label for="charColor${i}">Color</label><select id="charColor${i}"><option value="${d.color}">Default</option><option value="#ff5b6e">Coral red</option><option value="#4f7cff">Blue</option><option value="#ffb52e">Yellow</option><option value="#20bfa9">Teal</option><option value="#b66cff">Purple</option><option value="#ff79c6">Pink</option></select></div></div>
+  <div style="margin-top:10px"><label for="charDesc${i}">Description / design</label><textarea id="charDesc${i}" style="min-height:65px" placeholder="Clothes, personality, features">${d.desc}</textarea></div>`;
+  wrap.appendChild(card);
+ });
+}
+function getChars(){return defaults.map((d,i)=>({role:d.role,name:($('charName'+i)?.value||d.name).trim()||d.name,desc:($('charDesc'+i)?.value||d.desc).trim(),color:$('charColor'+i)?.value||d.color}))}
+function splitScript(text){
+ let t=text.replace(/\s+/g,' ').trim();if(!t)return [];
+ let parts=t.split(/(?<=[.!?])\s+/).filter(Boolean);
+ if(parts.length===1 && t.length>120){parts=t.match(/.{1,95}(?:\s|$)/g)||[t];parts=parts.map(x=>x.trim()).filter(Boolean)}
+ return parts;
+}
+function makeScenes(){
+ const parts=splitScript($('story').value);
+ if(!parts.length){setStatus('Go back and write or paste a script first.');showStep(5);return}
+ const chars=getChars(),targetMs=duration*1000;
+ // Scene count follows script, capped to make a usable local preview.
+ let chosen=parts.slice(0,24);
+ scenes=chosen.map((text,i)=>({text,character:chars[i%chars.length],side:chars[(i+1)%chars.length],palette:palettes[i%palettes.length],seed:i,duration:targetMs/chosen.length}));
+ current=0;playing=false;renderSceneList();draw(0);updateSummary();setStatus(`Created ${scenes.length} scenes for a ${duration}-second ${format}-form video. Tap Play story to preview.`);
+}
+function roundRect(x,y,w,h,r,fill){ctx.fillStyle=fill;ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fill()}
+function wrapText(text,maxWidth){const words=text.split(/\s+/),lines=[];let line='';for(const word of words){const test=line?line+' '+word:word;if(ctx.measureText(test).width>maxWidth&&line){lines.push(line);line=word}else line=test}if(line)lines.push(line);return lines}
+function drawPerson(x,y,s,color,pose,phase,ancient=false){
+ ctx.save();ctx.translate(x,y);ctx.scale(s,s);ctx.lineCap='round';ctx.lineJoin='round';ctx.strokeStyle='#20213a';ctx.lineWidth=8;
+ ctx.fillStyle='#ffd9b0';ctx.beginPath();ctx.arc(0,-92,24,0,Math.PI*2);ctx.fill();ctx.stroke();
+ ctx.fillStyle='#20213a';ctx.beginPath();ctx.arc(-8,-97,3.5,0,Math.PI*2);ctx.arc(8,-97,3.5,0,Math.PI*2);ctx.fill();
+ ctx.beginPath();if(pose===2)ctx.arc(0,-88,8,.15,Math.PI-.15);else ctx.arc(0,-86,7,.15,Math.PI-.15);ctx.stroke();
+ ctx.strokeStyle=ancient?'#b58a52':color;ctx.lineWidth=10;ctx.beginPath();ctx.arc(0,-100,21,Math.PI*1.08,Math.PI*1.9);ctx.stroke();
+ ctx.strokeStyle=ancient?'#b58a52':color;ctx.lineWidth=ancient?18:13;ctx.beginPath();ctx.moveTo(0,-66);ctx.lineTo(0,-7);ctx.stroke();
+ ctx.strokeStyle='#20213a';ctx.lineWidth=8;let swing=Math.sin(phase*5)*12;
+ ctx.beginPath();ctx.moveTo(0,-55);ctx.lineTo(-25+swing,-28);ctx.lineTo(-18+swing,-8);ctx.moveTo(0,-55);
+ if(pose===1){ctx.lineTo(35,-83);ctx.lineTo(48,-93)}else if(pose===2){ctx.lineTo(33,-43);ctx.lineTo(43,-65)}else{ctx.lineTo(27-swing,-27);ctx.lineTo(35-swing,-7)}ctx.stroke();
+ ctx.beginPath();if(pose===1){ctx.moveTo(0,-7);ctx.lineTo(-22,-1);ctx.lineTo(-32,25);ctx.moveTo(0,-7);ctx.lineTo(18,-2);ctx.lineTo(30,20)}else{ctx.moveTo(0,-7);ctx.lineTo(-15+Math.sin(phase*5)*8,20);ctx.lineTo(-25+Math.sin(phase*5)*8,23);ctx.moveTo(0,-7);ctx.lineTo(16-Math.sin(phase*5)*8,18);ctx.lineTo(28-Math.sin(phase*5)*8,22)}ctx.stroke();
+ if(ancient){ctx.fillStyle='#b58a52';ctx.beginPath();ctx.moveTo(-22,-72);ctx.lineTo(0,-82);ctx.lineTo(22,-72);ctx.lineTo(15,-58);ctx.lineTo(-15,-58);ctx.closePath();ctx.fill()}
+ ctx.restore();
+}
+function background(sc){
+ const ancient=template==='ancient',style=$('location').value.toLowerCase();
+ let g=ctx.createLinearGradient(0,0,720,1280);g.addColorStop(0,ancient?'#f7d9a1':sc.palette[0]);g.addColorStop(1,ancient?'#eaa96e':sc.palette[1]);ctx.fillStyle=g;ctx.fillRect(0,0,720,1280);
+ // sky decorations
+ ctx.fillStyle='rgba(255,255,255,.6)';for(let i=0;i<3;i++){ctx.beginPath();ctx.arc(110+i*240,160+(i%2)*65,42,0,Math.PI*2);ctx.arc(150+i*240,150+(i%2)*65,55,0,Math.PI*2);ctx.arc(190+i*240,170+(i%2)*65,34,0,Math.PI*2);ctx.fill()}
+ ctx.fillStyle=ancient?'#c99861':style.includes('school')?'#f6e4b7':style.includes('forest')?'#80c99a':sc.palette[2];ctx.fillRect(0,900,720,380);
+ if(ancient){ctx.fillStyle='#b77a49';ctx.fillRect(60,500,600,400);ctx.fillStyle='#f0c78b';ctx.fillRect(105,550,510,350);ctx.fillStyle='#99643e';ctx.fillRect(330,700,90,200);for(let i=0;i<4;i++){ctx.fillStyle='#e8ba78';ctx.fillRect(130+i*120,590,70,75)}}
+ else if(style.includes('school')){roundRect(70,480,580,420,24,'#fffaf0');ctx.fillStyle='#f7a8b9';ctx.fillRect(70,480,580,28);for(let i=0;i<4;i++)roundRect(110+i*132,550,90,95,8,'#8bd4ed')}
+ else if(style.includes('city')||style.includes('town')){for(let i=0;i<6;i++){ctx.fillStyle=['#9cafe4','#a4d8d1','#e9b7c6'][i%3];ctx.fillRect(i*125,600+(i%2)*80,110,350);for(let j=0;j<3;j++){ctx.fillStyle='#fff1b7';ctx.fillRect(i*125+20+j*28,640+(i%2)*80,14,22)}}}
+ else {ctx.fillStyle=ancient?'#bb8b56':'#5ab97a';ctx.beginPath();ctx.arc(120,850,90,0,Math.PI*2);ctx.fill();ctx.fillRect(100,850,40,130);ctx.beginPath();ctx.arc(600,850,100,0,Math.PI*2);ctx.fill();ctx.fillRect(580,850,40,130)}
+ ctx.fillStyle='rgba(28,53,70,.12)';ctx.fillRect(0,1090,720,190);
+}
+function draw(index,phase=0){
+ if(!scenes.length){ctx.fillStyle='#d9efff';ctx.fillRect(0,0,720,1280);drawPerson(360,910,2,'#ff5b6e',0,phase);roundRect(55,70,610,160,28,'rgba(255,255,255,.92)');ctx.fillStyle='#242540';ctx.font='bold 36px system-ui';ctx.fillText('Your stickman story',85,125);ctx.font='24px system-ui';ctx.fillText('Complete the steps, then create your video',85,174);return}
+ const sc=scenes[index],ancient=template==='ancient';background(sc);
+ const pose=/wave|hello|hi|invite|proud|happy|cheer|welcome|meet/i.test(sc.text)?1:/sad|nervous|scared|worried|cry|problem/i.test(sc.text)?2:0;
+ const bob=Math.sin(phase*4)*9;drawPerson(265,1000+bob,2.05,sc.character.color,pose,phase,ancient);
+ if(/friend|together|class|school|met|they|team|side/i.test(sc.text)||scenes.length>1)drawPerson(485,1010-bob,1.8,sc.side.color,1,phase+.5,ancient);
+ roundRect(42,70,636,280,30,'rgba(255,255,255,.93)');ctx.fillStyle='#282743';ctx.font='bold 25px system-ui';ctx.fillText(sc.character.name+' · '+(ancient?'Ancient world':'Modern world'),70,115);
+ ctx.fillStyle='#24243c';ctx.font='bold 29px system-ui';const lines=wrapText(sc.text,570).slice(0,5);lines.forEach((line,i)=>ctx.fillText(line,70,166+i*42));
+ if($('caption').value==='word'){const words=sc.text.split(/\s+/);const shown=words.slice(0,Math.max(1,Math.floor((phase%1)*words.length)+1)).join(' ');roundRect(58,1000,604,72,18,'rgba(20,22,40,.84)');ctx.fillStyle='#fff';ctx.font='bold 26px system-ui';ctx.fillText(shown.slice(0,39),80,1045)}
+ roundRect(42,1160,636,14,7,'rgba(255,255,255,.7)');roundRect(42,1160,636*((index+1)/scenes.length),14,7,'#7b5cff');ctx.fillStyle='#222342';ctx.font='bold 20px system-ui';ctx.fillText(`SCENE ${index+1} / ${scenes.length} · ${duration}s`,44,1215);
+}
+function renderSceneList(){const list=$('sceneList');list.innerHTML='';scenes.forEach((s,i)=>{const b=document.createElement('button');b.className='scene-chip'+(i===current?' active':'');b.textContent=`${i+1}. ${s.text}`;b.addEventListener('click',()=>{stopPlayback();current=i;draw(current);renderSceneList()});list.appendChild(b)})}
+function stopPlayback(){playing=false;cancelAnimationFrame(raf);$('play').textContent='▶ Play story'}
+function tick(now){if(!playing)return;if(!startAt)startAt=now;const elapsed=now-startAt,total=scenes.reduce((sum,s)=>sum+s.duration,0);if(elapsed>=total){stopPlayback();current=scenes.length-1;draw(current,elapsed/1000);renderSceneList();setStatus('Story preview finished.');return}let cursor=0,idx=0;for(;idx<scenes.length-1;idx++){if(elapsed<cursor+scenes[idx].duration)break;cursor+=scenes[idx].duration}current=idx;draw(idx,(elapsed-cursor)/1000);if(lastScene!==idx){lastScene=idx;renderSceneList()}raf=requestAnimationFrame(tick)}
+function play(){if(!scenes.length){setStatus('Finish the setup and tap Create video first.');return}stopPlayback();current=0;startAt=0;lastScene=-1;playing=true;$('play').textContent='▶ Playing…';setStatus('Playing animated preview.');raf=requestAnimationFrame(tick)}
+function updateSummary(){const chars=getChars();$('summary').innerHTML=`<b>Ready to create</b><br>Format: ${format==='short'?'Short form':'Long form'} · Template: ${template==='ancient'?'Stickman Ancient':'Stickman Normal'} · Duration: ${duration}s<br>Characters: ${chars.map(c=>c.name).join(', ')}<br>Topic: ${$('topic').value||'Not specified'}<br>Period: ${$('period').value|| (template==='ancient'?'Ancient / historical':'Present day')} · Location: ${$('location').value||'Not specified'}<br>Things to show: ${$('show').value||'None specified'}<br>Things to avoid: ${$('avoid').value||'None specified'}`;}
+function getVoice(){return voices.find(v=>v.name===$('voice').value)||voices.find(v=>v.default)||voices[0]}
+function say(text){if(!('speechSynthesis'in window)){setStatus('Narration is not available in this browser.');return}speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);const v=getVoice();if(v)u.voice=v;u.rate=.95;u.pitch=1.04;u.onstart=()=>setStatus('Narration playing through your device.');u.onend=()=>setStatus('Narration finished.');speechSynthesis.speak(u)}
+function loadVoices(){if(!('speechSynthesis'in window))return;voices=speechSynthesis.getVoices();const sel=$('voice'),prev=sel.value;sel.innerHTML='<option value="">Default device voice</option>';voices.forEach(v=>{const o=document.createElement('option');o.value=v.name;o.textContent=v.name+(v.lang?' ('+v.lang+')':'');sel.appendChild(o)});if(prev)sel.value=prev}
+function exportVideo(){if(!scenes.length){setStatus('Create the video first.');return}if(!canvas.captureStream||!window.MediaRecorder){setStatus('Video export is not supported in this iPhone browser. You can still preview and listen to narration. Try a newer Safari or a computer browser.');return}let mime='';const types=['video/mp4;codecs=h264','video/mp4','video/webm;codecs=vp9','video/webm'];if(MediaRecorder.isTypeSupported)mime=types.find(t=>MediaRecorder.isTypeSupported(t))||'';let stream;try{stream=canvas.captureStream(30)}catch(e){setStatus('Could not start video capture in this browser.');return}let rec;try{rec=new MediaRecorder(stream,mime?{mimeType:mime}:undefined)}catch(e){setStatus('This browser cannot create a supported video format.');return}const chunks=[];rec.ondataavailable=e=>{if(e.data&&e.data.size)chunks.push(e.data)};rec.onstop=()=>{stream.getTracks().forEach(t=>t.stop());const type=rec.mimeType||'video/webm',blob=new Blob(chunks,{type}),ext=type.includes('mp4')?'mp4':'webm',url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='my-stickman-story.'+ext;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);setStatus(`Export ready (${ext.toUpperCase()}). Narration is not embedded in the exported file yet.`)};const total=scenes.reduce((sum,s)=>sum+s.duration,0);let t0=performance.now();try{rec.start()}catch(e){setStatus('Could not start recording.');return}setStatus('Recording the animation… keep this page open.');function frame(now){const elapsed=now-t0;if(elapsed>=total){rec.stop();return}let cursor=0,idx=0;for(;idx<scenes.length-1;idx++){if(elapsed<cursor+scenes[idx].duration)break;cursor+=scenes[idx].duration}draw(idx,(elapsed-cursor)/1000);requestAnimationFrame(frame)}requestAnimationFrame(frame)}
+document.querySelectorAll('[data-format]').forEach(b=>b.addEventListener('click',()=>{format=b.dataset.format;document.querySelectorAll('[data-format]').forEach(x=>x.classList.toggle('selected',x===b))}));
+document.querySelectorAll('[data-template]').forEach(b=>b.addEventListener('click',()=>{template=b.dataset.template;document.querySelectorAll('[data-template]').forEach(x=>x.classList.toggle('selected',x===b));draw(current)}));
+document.querySelectorAll('[data-duration]').forEach(b=>b.addEventListener('click',()=>{duration=Number(b.dataset.duration);document.querySelectorAll('[data-duration]').forEach(x=>x.classList.toggle('selected',x===b))}));
+$('back').addEventListener('click',()=>showStep(step-1));
+$('next').addEventListener('click',()=>{if(step===4&&!$('topic').value.trim()&&!$('story').value.trim()){setStatus('Add a topic or continue to the script step and write your story.')}showStep(step+1)});
+$('create').addEventListener('click',()=>{makeScenes();if(scenes.length){draw(0);setStatus(`Your ${duration}-second story is ready to preview. Tap Play story.`)}});
+$('play').addEventListener('click',play);$('stop').addEventListener('click',()=>{stopPlayback();if('speechSynthesis'in window)speechSynthesis.cancel();setStatus('Stopped.');draw(current)});
+$('speak').addEventListener('click',()=>say(scenes.length?scenes.map(s=>s.text).join(' '):$('story').value));
+$('mute').addEventListener('click',()=>{if('speechSynthesis'in window)speechSynthesis.cancel();setStatus('Narration stopped.')});
+$('export').addEventListener('click',exportVideo);
+makeCharacterForms();if('speechSynthesis'in window){loadVoices();speechSynthesis.onvoiceschanged=loadVoices}draw(0);showStep(0);
+})();
+</script>
+</body>
+</html>
